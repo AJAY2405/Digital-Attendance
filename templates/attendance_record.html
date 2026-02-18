@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Attendance Records</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .filter-btn { margin: 5px 2px; }
+    .filter-btn.active { font-weight: bold; background-color: #007bff; color: white; }
+  </style>
+  <script>
+    // Format ISO timestamp to "DD Mon HH:MM AM/PM" format
+    function formatTimestamp(isoString) {
+      const date = new Date(isoString);
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = months[date.getMonth()];
+      const hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      return `${day} ${month} ${displayHours}:${minutes} ${ampm}`;
+    }
+    
+    // Format all timestamps when page loads
+    window.addEventListener('load', () => {
+      document.querySelectorAll('[data-timestamp]').forEach(el => {
+        const isoTime = el.getAttribute('data-timestamp');
+        el.innerText = formatTimestamp(isoTime);
+      });
+    });
+  </script>
+</head>
+<body>
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Attendance Records</h4>
+    <div>
+      <a class="btn btn-outline-primary" href="/download_csv">Download CSV</a>
+      <a class="btn btn-outline-secondary" href="/">Back</a>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <h6 class="text-muted">Filter by Period:</h6>
+    <a href="/attendance_record?period=all" class="btn btn-sm btn-outline-primary filter-btn {% if period == 'all' %}active{% endif %}">All Records</a>
+    <a href="/attendance_record?period=daily" class="btn btn-sm btn-outline-secondary filter-btn {% if period == 'daily' %}active{% endif %}">Today Only</a>
+    <a href="/attendance_record?period=weekly" class="btn btn-sm btn-outline-secondary filter-btn {% if period == 'weekly' %}active{% endif %}">Last 7 Days</a>
+    <a href="/attendance_record?period=monthly" class="btn btn-sm btn-outline-secondary filter-btn {% if period == 'monthly' %}active{% endif %}">Last 30 Days</a>
+  </div>
+
+  {% if records|length == 0 %}
+  <div class="alert alert-info">No attendance records found for this period.</div>
+  {% else %}
+  <div class="alert alert-success">Total: {{ records|length }} records</div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Student ID</th>
+          <th>Student Name</th>
+          <th>Date & Time</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in records %}
+        <tr>
+          <td><small>{{ r[0] }}</small></td>
+          <td><small>{{ r[1] }}</small></td>
+          <td><strong>{{ r[2] }}</strong></td>
+          <td><small data-timestamp="{{ r[3] }}">{{ r[3] }}</small></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>
